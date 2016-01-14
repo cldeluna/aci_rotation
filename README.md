@@ -36,6 +36,7 @@ dhcp-171-71-130-176:aci_rotation Claudia$ python verchk.py "approved_version.txt
 
 This is the approved version:  7.0(3)I2(3)
 	Switches not running this version will require an upgrade
+	
 ===========================================================================
 
 	Hostname: N9k3
@@ -62,4 +63,22 @@ This is the approved version:  7.0(3)I2(3)
 	Upgrade required from version: 7.0(3)I2(1) to version: 7.0(3)I2(3)
 ===========================================================================
 Created at:  Thu Jan 14 14:43:39 2016
+dhcp-171-71-130-176:aci_rotation Claudia$
+
+
+Using the Dev-Net Sanbox switch:
+
+dhcp-171-71-130-176:aci_rotation Claudia$ python verchk.py "approved_version.txt" "ip_address.txt"
+
+This is the approved version:  7.0(3)I2(3)
+	Switches not running this version will require an upgrade
+	
+===========================================================================
+
+	Hostname: n9kvswitchfcs
+	IP Address: 10.10.10.57
+	Switch Model:  Chassis
+	Upgrade required from version: 7.0(3)I2(1) to version: 7.0(3)I2(3)
+===========================================================================
+Created at:  Thu Jan 14 14:50:09 2016
 dhcp-171-71-130-176:aci_rotation Claudia$
