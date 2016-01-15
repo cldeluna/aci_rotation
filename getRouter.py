@@ -11,15 +11,18 @@ __license__ = "Python"
 import sys
 
 def getRouter(rtr):
+
     router1 = {'os_version':'3.1.1','hostname':'nyc_router1','model':'nexus9396','domain':'cisco.com','mgmt_ip':'10.1.50.11'}
     router2 = dict( os_version='3.2.1', hostname='rtp_router2',model='nexus 9396',domain='cisco.com', mgmt_ip='10.1.50.12')
     router3 = dict( os_version='3.1.1', hostname='ROUTER3',model='nexus 9504',domain='lab.cisco.com', mgmt_ip='10.1.50.13')
-    if rtr == 'router1':
-        return router1
-    elif rtr == 'router2':
-        return router2
-    elif rtr == 'router3':
-        return router3
+
+    router_list = [router1,router2,router3]
+    #print(router_list)
+
+    for router in router_list:
+        if rtr == router['hostname']:
+            return router
+
     return 'No router found.'
 
 
@@ -27,8 +30,18 @@ def getRouter(rtr):
 
 def main():
     data = getRouter(sys.argv[1])
-    print("Data: ",data)
+    print("Data Returned: ",data)
 
+    print "\n\n"
+
+    result1 = getRouter('nyc_router1')
+    print "result 1: ", result1
+
+    result2 = getRouter('ROUTER3')
+    print "result 2: ",result2
+
+    result3 = getRouter('ROUTER77')
+    print "result 3: ",result3
 
 
 # Standard call to the main() function.
