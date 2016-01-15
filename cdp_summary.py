@@ -8,6 +8,7 @@ __date__ = "1/14/16  9:38 PM"
 __copyright__ = "Copyright (c) 2015 Claudia"
 __license__ = "Python"
 
+# Import required modules
 import sys
 import re
 import xmltodict
