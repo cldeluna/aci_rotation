@@ -9,12 +9,12 @@ __copyright__ = "Copyright (c) 2015 Claudia"
 __license__ = "Python"
 
 import sys
-#from cobra.mit.session import LoginSession
-#from cobra.mit.access import MoDirectory
-#from cobra.mit.request import ConfigRequest
-#from cobra.model.fv import Tenant
 import lxml.etree as etree
 import acitoolkit.acitoolkit as ACI
+import urllib3
+import requests
+
+
 
 
 def extract_vlans(vlan_file):
@@ -23,13 +23,13 @@ def extract_vlans(vlan_file):
     vlan_dict = {}
     row = 0
     for v in vlans:
-        print v
+        #print v
         vlan_row = v.split(',')
-        print vlan_row
+        #print "vlan_row", vlan_row
         if row > 1 and vlan_row[2] != "1":
             vlan_dict[vlan_row[2]]=vlan_row[3]
         row += 1
-    print "****Vlan Dictionary", vlan_dict
+   #print "****Vlan Dictionary", vlan_dict
 
     return vlan_dict
 
@@ -59,35 +59,15 @@ def apic_login_acitk(hostname,username,password):
     return session
 
 
-def create_tenant(moDir, tenant_name):
-
-    policy_universe = moDir.lookupByDn("uni")
-    #
-    fvTenantMo = Tenant(policy_universe, tenant_name)
-
-    # print this querly in xml format
-    #pol_uni = etree.parse(policy_universe)
-    #print etree.tostring(pol_uni, pretty_print= True)
-    #print toXMLStr(policy_universe prettyPrint=True)
-    #print policy_universe
-
-    # commit the change using a configrequest object
-    configReq = ConfigRequest()
-    configReq.addMo(fvTenantMo)
-    moDir.commit(configReq)
-
-pass
-
-
 
 def print_tenant(session):
     # Download all of the tenants
-    print "="*20 + "TENANT" + "="*20
+    #print "="*20 + "TENANT" + "="*20
     tenants = ACI.Tenant.get(session)
     tenant_list =[]
-    print tenants
+    #print tenants
     for tenant in tenants:
-        print(tenant.name)
+        #print(tenant.name)
         tenant_list.append(tenant.name)
     return tenant_list
 
@@ -98,14 +78,16 @@ def main():
 
     hostname, username, password, tenant_name, vlan_csv = sys.argv[1:]
 
+    print "\n\n" + "="*20 + 'Creating Application Network Profiles and End Point Groups for each existing Vlan.' + "="*20
+    print "="*10 + "Processing VLAN file " + vlan_csv +' for new Tenant ' + tenant_name + ' by user ' + username + " on APIC " + hostname + "="*10
 
     vlans = extract_vlans(vlan_csv)
     for vlan_id,vlan_name in vlans.items():
-        print vlan_id, vlan_name
+        #print vlan_id, vlan_name
         epg_name = "v"+vlan_id.strip()+"_"+vlan_name.upper().strip()+"_EPG"
         anp_name = "v"+vlan_id.strip()+"_"+vlan_name.upper().strip()+"_ANP"
         epg_anp_dict[anp_name]=epg_name
-    print epg_anp_dict
+    #print epg_anp_dict
 
     print "\nLogging in to APIC"
     apic_session = apic_login_acitk(hostname, username, password)
@@ -115,17 +97,22 @@ def main():
     print "="*10 + "Attempting to create Tenant " + tenant_name + ' by user ' + username + " on APIC " + hostname + "="*10
     if tenant_name in tenants:
 
-        print "\n\t Tenant <"+tenant_name+ "> already exists and does not need to be created."
+        print "\n\t Tenant <"+tenant_name+ "> already exists and does not need to be created.\n"
+        for t in tenants:
+            print "\t Tenant "+t + " exists."
+        print "\t\n Exiting Script.\n"
+        sys.exit()
+
     else:
 
-        print "\n\tCreating Tenant " + tenant_name
+        print "\n\tCreating Tenant " + tenant_name + "\n"
         #create_tenant(modir, tenant_name)
         tenant = ACI.Tenant(tenant_name)
 
     for anp, epg in epg_anp_dict.items():
 
-        # Create the Tenant, App Profile, and EPG
-        #tenant = aci.Tenant(TENANT_NAME)
+        # Create the App Profile, and EPG
+        print "\tCreating Application Profile " + anp + " with EPG " + epg
         aciapp = ACI.AppProfile(anp, tenant)
         aciepg = ACI.EPG(epg, aciapp)
 
@@ -147,4 +134,6 @@ if __name__ == '__main__':
         print '\nUsage:python createVlan2epg.py <hostname> <username> <password> <tenant name> <anp name> <vlan csv file> \nExample: python createVlan2epg.py "172.18.180.187" "admin" "TSNaci123" "CdL520" "belfast-get-vlan.csv"\n\nNote: Fill in.\n\n'
         sys.exit()
     else:
+        urllib3.disable_warnings()
+        requests.packages.urllib3.disable_warnings()
         main()
