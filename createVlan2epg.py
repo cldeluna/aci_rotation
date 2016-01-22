@@ -13,6 +13,7 @@ import lxml.etree as etree
 import acitoolkit.acitoolkit as ACI
 import urllib3
 import requests
+import re
 
 
 
@@ -65,7 +66,7 @@ def print_tenant(session):
     #print "="*20 + "TENANT" + "="*20
     tenants = ACI.Tenant.get(session)
     tenant_list =[]
-    #print tenants
+    #print "tenants", tenants
     for tenant in tenants:
         #print(tenant.name)
         tenant_list.append(tenant.name)
@@ -89,12 +90,13 @@ def main():
         epg_anp_dict[anp_name]=epg_name
     #print epg_anp_dict
 
-    print "\nLogging in to APIC"
+    print "="*10 + "Attempting to create Tenant " + tenant_name + ' by user ' + username + " on APIC " + hostname + "="*10
+
+    print "\n\tLogging in to APIC"
     apic_session = apic_login_acitk(hostname, username, password)
     tenants = print_tenant(apic_session)
     #print "modir ",modir
     #print "tenant_name ", tenant_name
-    print "="*10 + "Attempting to create Tenant " + tenant_name + ' by user ' + username + " on APIC " + hostname + "="*10
     if tenant_name in tenants:
 
         print "\n\t Tenant <"+tenant_name+ "> already exists and does not need to be created.\n"
@@ -109,12 +111,27 @@ def main():
         #create_tenant(modir, tenant_name)
         tenant = ACI.Tenant(tenant_name)
 
+        #Configure a Private Network/VRF for the Tenant
+        tenant_vrf = tenant_name + "_VRF"
+        context = ACI.Context(tenant_vrf, tenant)
+
+
     for anp, epg in epg_anp_dict.items():
 
-        # Create the App Profile, and EPG
-        print "\tCreating Application Profile " + anp + " with EPG " + epg
+        # Create the App Profile, Bridge Domain, and EPG
+        bd_name = re.sub("_EPG","_BD",epg )
+        #print "bd_name: ",bd_name
+
+        print "\tCreating Application Profile " + anp + " with EPG " + epg + " and BD " + bd_name
         aciapp = ACI.AppProfile(anp, tenant)
         aciepg = ACI.EPG(epg, aciapp)
+        acibd = ACI.BridgeDomain(bd_name, tenant)
+
+        #Add the BD to the context
+        acibd.add_context(context)
+
+        #Add the BD to the EPG
+        aciepg.add_bd(acibd)
 
         # Push it all to the APIC
         resp = tenant.push_to_apic(apic_session)
